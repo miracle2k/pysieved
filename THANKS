@@ -1,0 +1,6 @@
+Thanks to:
+
+* Robert Schetterer <robert@schetterer.org> for convincing me to make
+  things more modular, plus weeks worth of patient debugging
+* Petr Smotek <psm@volny.cz> for writing the MySQL auth and userdb
+  modules
