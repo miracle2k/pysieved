@@ -29,6 +29,8 @@ import socket
 import tempfile
 import config
 
+version = managesieve.version
+
 class DebugScriptStorage(storage.ScriptStorage):
     def __init__(self):
         self.scripts = {}
@@ -141,7 +143,7 @@ class Basic(unittest.TestCase):
         self.sock = StringSock()
         thread.start_new(DebugRequestHandler,
                          (self.sock, None, None))
-        self.expect('"IMPLEMENTATION" "pysieved 0.2"\r\n')
+        self.expect('"IMPLEMENTATION" "%s"\r\n' % version)
         self.expect('"SASL" "PLAIN"\r\n')
         self.expect('"SIEVE" "fileinto vacation"\r\n')
         self.expect('OK\r\n')
@@ -189,7 +191,7 @@ class Unauthenticated(Basic):
         self.push('debug tls\r\n')
         self.expect('OK "You are a big fat cheater"\r\n')
         self.push('capability\r\n')
-        self.expect('"IMPLEMENTATION" "pysieved 0.2"\r\n')
+        self.expect('"IMPLEMENTATION" "%s"\r\n' % version)
         self.expect('"SASL" "PLAIN"\r\n')
         self.expect('"SIEVE" "fileinto vacation"\r\n')
         self.expect('OK\r\n')
@@ -338,7 +340,7 @@ class RegressionInetd(unittest.TestCase):
             os.execlp(argv[0], *argv)
 
         os.unlink(sockname)
-        self.expect('"IMPLEMENTATION" "pysieved 0.2"\r\n')
+        self.expect('"IMPLEMENTATION" "%s"\r\n' % version)
         self.expect('"SASL" "PLAIN"\r\n')
         self.expect('"SIEVE" "%s"\r\n' % dovecot.new.capabilities)
         self.expect('OK\r\n')
@@ -424,10 +426,11 @@ class RegressionDaemon(unittest.TestCase):
 	s.connect(('127.0.0.1', self.port))
 	time.sleep(0.1)
 	d = s.recv(4000)
-	self.failUnlessEqual(d, ('"IMPLEMENTATION" "pysieved 0.2"\r\n'
+	self.failUnlessEqual(d, ('"IMPLEMENTATION" "%s"\r\n'
                                  '"SASL" "PLAIN"\r\n'
                                  '"SIEVE" "%s"\r\n'
-                                 'OK\r\n' % dovecot.new.capabilities))
+                                 'OK\r\n' % (version,
+                                             dovecot.new.capabilities)))
 
 
 
