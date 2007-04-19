@@ -23,7 +23,7 @@ import socket
 import time
 import os
 
-version = "pysieved 0.9"
+version = "pysieved 0.9+DEV"
 maxsize = 100000
 
 class Hangup(Exception):
