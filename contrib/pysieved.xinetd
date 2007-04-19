@@ -1,0 +1,17 @@
+# default: off
+# description: managesieve server allows for server side mail filtering
+# author: Joakim Ryden <jo@our-own.net>
+
+service sieve
+{
+	disable		= no
+	socket_type	= stream
+	wait		= no
+	user		= mail
+	group		= mail
+	server		= /usr/local/sbin/pysieved.py
+	server_args	= --inetd
+	only_from	= 127.0.0.1
+	umask		= 002
+	log_on_failure  += USERID
+}

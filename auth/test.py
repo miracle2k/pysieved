@@ -22,6 +22,9 @@ import unittest
 import os
 import pam
 import sasl
+import htpasswd
+import tempfile
+import crypt
 
 class Config:
     def __init__(self):
@@ -45,12 +48,22 @@ class AuthTest(unittest.TestCase):
     def attempt(self, module):
         u = module.new(0, self.c)
         self.failUnless(u.auth(self.user, self.passwd))
-        self.failIf(u.auth(self.user, self.passwd + '.'))
-        self.failIf(u.auth(self.user + '.', self.passwd))
-        self.failIf(u.auth(self.user + '.', self.passwd + '.'))
+        self.failIf(u.auth(      self.user, '.' + self.passwd))
+        self.failIf(u.auth('.' + self.user,       self.passwd))
+        self.failIf(u.auth('.' + self.user, '.' + self.passwd))
 
     def test_pam(self):
         self.attempt(pam)
 
     def test_sasl(self):
         self.attempt(sasl)
+
+    def test_htpasswd(self):
+        f = tempfile.NamedTemporaryFile()
+        for i in range(10):
+            pw = crypt.crypt('pass%d', 'bm')
+            f.write('wembly%d:%s\n' % (i, pw))
+        f.write('%s:%s\n' % (self.user, crypt.crypt(self.passwd, 'aa')))
+        f.flush()
+        self.c.set('htpasswd', 'passwdfile', f.name)
+        self.attempt(htpasswd)

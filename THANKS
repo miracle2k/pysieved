@@ -4,3 +4,6 @@ Thanks to:
   things more modular, plus weeks worth of patient debugging
 * Petr Smotek <psm@volny.cz> for writing the MySQL auth and userdb
   modules
+* Joakim Ryden <jo@our-own.net> for the xinetd configuration
+* David Anderson <dovecot@dw-perspective.org.uk> for the initial
+  htpasswd2 module, and a tip about the Dovecot Authentication Protocol

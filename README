@@ -12,10 +12,14 @@ Download
 --------
 
 You can get the latest version [as
-a tarball](http://woozle.org/~neale/repos/pysieved/pysieved.tar.gz),
-or with darcs:
+a tarball](http://woozle.org/~neale/projects/?p=pysieved.git;a=snapshot;h=HEAD),
+or with cogito:
 
-    darcs get http://woozle.org/~neale/repos/pysieved
+    cg-clone http://woozle.org/~neale/projects/pysieved.git
+
+I'll release 1.0 soon, I swear.  As of April 17, 2007, it's pretty much
+ready for release.  I just need to fold in a xinetd script someone sent
+me and update some documentation.
 
 
 Plugin architecture
