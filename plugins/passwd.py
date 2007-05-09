@@ -19,23 +19,15 @@
 ## USA
 
 import __init__
-from crypt import crypt
+import pwd
+import os
 
-class new(__init__.Auth):
-    def init(self, config):
-        self.passfile = config.get('htpasswd', 'passwdfile',
-                                   '/etc/exim/virtual/passwd')
-
-        self.passwd = {}
-        for l in file(self.passfile):
-            parts = l.rstrip().split(':', 1)
-            self.passwd[parts[0]] = parts[1]
-
-    def auth(self, username, password):
-        try:
-            cpass = self.passwd[username]
-        except KeyError:
-            return False
-
-        return cpass == crypt(password, cpass[:2])
+class new(__init__.new):
+    def lookup(self, params):
+        pwent = pwd.getpwnam(params['username'])
+        uid = pwent[2]
+        gid = pwent[3]
+        os.setgid(gid)
+        os.setuid(uid)
+        return pwent[5]
 

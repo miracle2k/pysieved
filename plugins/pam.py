@@ -21,24 +21,24 @@
 import __init__
 import PAM
 
-class new(__init__.Auth):
+class new(__init__.new):
     def init(self, config):
         self.service = config.get('PAM', 'service', 'pysieved')
 
-    def auth(self, username, passwd):
+    def auth(self, params):
         def conv(auth, query_list, user_data):
             resp = []
             for query, qtype in query_list:
                 if qtype == PAM.PAM_PROMPT_ECHO_OFF:
                     # Read string with echo turned off
-                    resp.append((passwd, 0))
+                    resp.append((params['passwd'], 0))
                 else:
                     return None
             return resp
 
         auth = PAM.pam()
         auth.start(self.service)
-        auth.set_item(PAM.PAM_USER, username)
+        auth.set_item(PAM.PAM_USER, params['username'])
         auth.set_item(PAM.PAM_CONV, conv)
 
         try:
@@ -57,4 +57,5 @@ if __name__ == '__main__':
             return 'pysieved'
 
     n = new(C())
-    print n.auth(sys.argv[1], sys.argv[2])
+    print n.auth({'username': sys.argv[1],
+                  'password': sys.argv[2]})

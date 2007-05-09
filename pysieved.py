@@ -56,30 +56,54 @@ def main():
     port = options.port or config.getint('main', 'port', 2000)
     pidfile = options.pidfile or config.get('main', 'pidfile',
                                             '/var/run/pysieved.pid')
-    auth = __import__('auth.%s' % config.get('main', 'auth', 'SASL').lower(),
+
+    ##
+    ## Import plugins
+    ##
+    auth = __import__('plugins.%s' % config.get('main', 'auth', 'SASL').lower(),
                       None, None, True)
-    userdb = __import__('userdb.%s' % config.get('main', 'userdb', 'passwd').lower(),
+    userdb = __import__('plugins.%s' % config.get('main', 'userdb', 'passwd').lower(),
                       None, None, True)
-    storage = __import__('storage.%s' % config.get('main', 'storage', 'Dovecot').lower(),
+    storage = __import__('plugins.%s' % config.get('main', 'storage', 'Dovecot').lower(),
                          None, None, True)
 
 
+    # If the same plugin is used in two places, recycle it
     authenticate = auth.new(options.debug, config)
-    homedir = userdb.new(options.debug, config)
-    store = storage.new(options.debug, config)
+
+    if userdb == auth:
+        homedir = authenticate
+    else:
+        homedir = userdb.new(options.debug, config)
+
+    if storage == auth:
+        store = authenticate
+    elif storage == userdb:
+        store = homedir
+    else:
+        store = storage.new(options.debug, config)
+
 
     class handler(managesieve.RequestHandler):
         debug = options.debug
         capabilities = store.capabilities
 
+        def __init__(self, *args):
+            self.params = {}
+            managesieve.RequestHandler.__init__(self, *args)
+
         def authenticate(self, username, passwd):
-            return authenticate.auth(username, passwd)
+            self.params['username'] = username
+            self.params['password'] = passwd
+            return authenticate.auth(self.params)
 
         def get_homedir(self, username):
-            return homedir.lookup(username)
+            self.params['username'] = username
+            return homedir.lookup(self.params)
 
         def new_storage(self, homedir):
-            return store.create(homedir)
+            self.params['homedir'] = homedir
+            return store.create(self.params)
 
     if options.stdin:
         sock = socket.fromfd(0, socket.AF_INET, socket.SOCK_STREAM)
