@@ -31,7 +31,7 @@ class new(__init__.new):
             for query, qtype in query_list:
                 if qtype == PAM.PAM_PROMPT_ECHO_OFF:
                     # Read string with echo turned off
-                    resp.append((params['passwd'], 0))
+                    resp.append((params['password'], 0))
                 else:
                     return None
             return resp

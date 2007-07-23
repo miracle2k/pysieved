@@ -177,42 +177,88 @@ class new(__init__.new):
 
     def init(self, config):
         self.mux = config.get('Dovecot', 'mux', False)
+        self.master = config.get('Dovecot', 'master', False)
         self.service = config.get('Dovecot', 'service', 'pysieved')
         self.sievec = config.get('Dovecot', 'sievec',
                                  '/usr/lib/dovecot/sievec')
         self.scripts_dir = config.get('Dovecot', 'scripts', '.pysieved')
+        self.uid = config.getint('Dovecot', 'uid', None)
+        self.gid = config.getint('Dovecot', 'gid', None)
 
-        # Only try to connect the auth socket if a mux was specified in
-        # the configuration file
-        if self.mux:
-            self.auth_sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            self.auth_sock.connect(self.mux)
-
-        self.pid = os.getpid()
+        # Drop privileges here if all users share the same uid/gid
+        if self.gid >= 0:
+            os.setgid(self.gid)
+        if self.uid >= 0:
+            os.setuid(self.uid)
 
 
     def auth(self, params):
-        handshake_string = self.auth_sock.recv(1024)
+        # We can do this only if a MUX socket was specified
+        if self.mux:
+            self.auth_sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            self.auth_sock.connect(self.mux)
+            handshake_string = self.auth_sock.recv(1024)
+            self.auth_sock.sendall('VERSION\t1\t0\nCPID\t%d\n' % os.getpid())
+        else:
+            raise ValueError('No MUX socket was specified')
 
-        self.auth_sock.sendall('VERSION\t1\t0\nCPID\t%d\n' % self.pid)
-
+        # Since this socket will be used only once, use a hardcoded request ID
         auth_string = ('AUTH\t%d\tPLAIN\tservice=%s\tresp=%s' %
-                       (self.pid,
+                       (1,
                         self.service,
                         base64.encodestring(params['username'] + '\0' +
                                             params['username'] + '\0' +
-                                            params['passwd'])))
+                                            params['password'])))
         self.auth_sock.sendall(auth_string + '\n')
         ret = self.auth_sock.recv(1024)
 
-        self.log(2, 'Auth returns %r' % ret)
+        self.auth_sock.close();
+
         if ret.startswith('OK'):
             return True
         return False
 
 
+    def lookup(self, params):
+        # We can do this only if a master socket was specified
+        if self.master:
+            self.user_sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            self.user_sock.connect(self.master)
+            master_handshake_string = self.user_sock.recv(1024)
+            self.user_sock.sendall('VERSION\t1\t0\n')
+        else:
+            raise ValueError('No master socket was specified')
+
+        # Since this socket will be used only once, use a hardcoded request ID
+        lookup_string = ('USER\t%d\t%s\tservice=%s' %
+                         (1,
+                          params['username'],
+                          self.service))
+        self.user_sock.sendall(lookup_string + '\n')
+        ret = self.user_sock.recv(1024)
+
+        self.user_sock.close();
+
+        if ret.startswith('USER\t'):
+            uid = ret[ret.find('\tuid=')+5:]
+            uid = uid[:uid.find('\t')]
+            gid = ret[ret.find('\tgid=')+5:]
+            gid = gid[:gid.find('\t')]
+            home = ret[ret.find('\thome=')+6:]
+            home = home[:home.find('\t')]
+
+            # Assuming we were started with elevated privileges, drop them now
+            if (self.gid < 0) and (int(gid) >= 0):
+                os.setgid(int(gid))
+
+            if (self.uid < 0) and (int(uid) >= 0):
+                os.setuid(int(uid))
+
+            return home
+        else:
+            return None
+
+
     def create_storage(self, params):
         return ScriptStorage(self.sievec,
                              self.scripts_dir,
-                             params['homedir'])
-
