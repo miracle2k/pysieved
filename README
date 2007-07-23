@@ -12,14 +12,14 @@ Download
 --------
 
 You can get the latest version [as
-a tarball](http://woozle.org/~neale/projects/?p=pysieved.git;a=snapshot;h=HEAD),
-or with cogito:
+a tarball](http://woozle.org/~neale/projects/?p=pysieved;a=snapshot;h=HEAD),
+or [with cogito](http://woozle.org/~neale/projects/?p=pysieved):
 
-    cg-clone http://woozle.org/~neale/projects/pysieved.git
+    cg-clone http://woozle.org/~neale/projects/pysieved
 
-I'll release 1.0 soon, I swear.  As of April 17, 2007, it's pretty much
-ready for release.  I just need to fold in a xinetd script someone sent
-me and update some documentation.
+Version 1.0 may come out eventually (needs logging and more testing),
+but don't let that scare you away from trying it.  Many people are using
+the current version to great success.
 
 
 Plugin architecture
@@ -29,12 +29,14 @@ The server ships with the following plug-ins:
 
 Authentication:
 
+* Dovecot
 * PAM
 * SASL
 * MySQL
 
 Homedir lookup & session initiation:
 
+* Dovecot
 * /etc/passwd
 * MySQL
 * simple virtual hosting (eg. /var/lib/virtual/username)
