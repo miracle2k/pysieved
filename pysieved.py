@@ -103,7 +103,7 @@ def main():
 
         def new_storage(self, homedir):
             self.params['homedir'] = homedir
-            return store.create(self.params)
+            return store.create_storage(self.params)
 
     if options.stdin:
         sock = socket.fromfd(0, socket.AF_INET, socket.SOCK_STREAM)

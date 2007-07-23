@@ -1,0 +1,125 @@
+Dovecot authentication
+----------------------
+
+If you want to use Dovecot authentication, set the mux config item
+in the [Dovecot] session to the path to a client socket as defined
+in dovecot.conf, e.g. :
+
+dovecot.conf :
+  auth default {
+    socket listen {
+      client {
+        path = /var/spool/postfix/auth/dovecot
+        mode = 0666
+        user = postfix
+        group = postfix
+      }
+    }
+  }
+
+pysieved.ini :
+  [Dovecot]
+  mux = /var/spool/postfix/auth/dovecot
+
+
+
+Dovecot userdb lookup
+---------------------
+
+If you want to use Dovecot userdb to get the uid/gid/home of the
+user, set the master config item in the [Dovecot] session to the
+path to a master socket as defined in dovecot.conf, e.g. :
+
+dovecot.conf :
+  auth default {
+    socket listen {
+      master {
+        path = /var/run/dovecot/auth-master
+        mode = 0600
+        user = vmail
+        group = vmail
+      }
+    }
+  }
+
+pysieved.ini :
+  [Dovecot]
+  master = /var/run/dovecot/auth-master
+
+
+
+Dovecot socket permissions
+--------------------------
+
+In an environment where all users are virtual and share the same
+uid/gid, it is possible to run pysieved as non-root by specifying
+NUMERIC uid/gid values in the [Dovecot] section, e.g. :
+
+pysieved.ini :
+  [Dovecot]
+  uid=1000
+  gid=100
+
+In that case, special care may be needed so that pysieved can
+access the 'mux' and 'master' sockets (and write the pidfile).
+
+The pidfile can be moved to a directory that is writeable
+by the specified uid/gid, e.g. :
+
+pysieved.ini :
+  [main]
+  pidfile = /var/run/pysieved/pysieved.pid
+
+The Dovecot client socket (mux) can safely be exported with 0666
+permissions. But a common scenario places that socket inside the
+Postfix chroot area, as /var/spool/postfix/private/auth where
+the private directory is accessible only by the postfix user. 
+Moving it to a different, public, directory should work just as
+well, e.g. :
+
+dovecot.conf :
+  auth default {
+    socket listen {
+      client {
+        path = /var/spool/postfix/auth/dovecot
+        mode = 0666
+        user = postfix
+        group = postfix
+      }
+    }
+  }
+
+pysieved.ini :
+  [Dovecot]
+  mux = /var/spool/postfix/auth/dovecot
+
+main.cf :
+  smtpd_sasl_type = dovecot
+  smtpd_sasl_path = auth/dovecot
+
+As for the master socket, it can have restrictive permissions,
+as recommended in the Dovecot documentation, if you make it
+owned by the same user who owns the mail storage (which works
+out well if using the Dovecot deliver LDA with Postfix). E.g. :
+
+dovecot.conf :
+  auth default {
+    socket listen {
+      master {
+        path = /var/run/dovecot/auth-master
+        mode = 0600
+        user = vmail
+        group = vmail
+      }
+    }
+  }
+
+pysieved.ini :
+  [Dovecot]
+  master = /var/run/dovecot/auth-master
+
+master.cf :
+  dovecot         unix    -       n       n       -       -       pipe
+    flags=DRhu user=vmail:vmail
+    argv=/usr/local/libexec/dovecot/deliver -f $sender -d $recipient
+

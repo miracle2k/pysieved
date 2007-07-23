@@ -7,3 +7,6 @@ Thanks to:
 * Joakim Ryden <jo@our-own.net> for the xinetd configuration
 * David Anderson <dovecot@dw-perspective.org.uk> for the initial
   htpasswd2 module, and a tip about the Dovecot Authentication Protocol
+* Jonathan Stewart <jonathan@kc8onw.net> for a few bugfixes
+* Philippe Levan <levan@epix.net> for lots of work off the dovecot
+  module
