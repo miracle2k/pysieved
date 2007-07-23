@@ -23,6 +23,7 @@ import SocketServer
 import socket
 import os
 import managesieve
+import syslog
 from config import Config
 
 
@@ -45,9 +46,12 @@ def main():
                       help='Location of config file',
                       action='store', dest='config',
                       default='/usr/local/etc/pysieved.ini')
+    parser.add_option('-v', '--verbosity',
+                      help="Set logging verbosity level (default 1)",
+                      action='store', dest='verbosity', default=1, type='int')
     parser.add_option('-d', '--debug',
-                      help='Turn on debugging (twice for more verbosity)',
-                      action='count', dest='debug')
+                      help='Log to stderr',
+                      action='store_true', dest='debug', default=False)
     (options, args) = parser.parse_args()
 
     # Read config file
@@ -68,31 +72,50 @@ def main():
                          None, None, True)
 
 
+    # Define the log function
+    syslog.openlog('pysieved[%d]' % (os.getpid()), 0, syslog.LOG_MAIL)
+    def log(l, s):
+        if l <= options.verbosity:
+            if options.debug:
+                sys.stderr.write('%s %s\n' % ("=" * l, s))
+            else:
+                if l > 0:
+                    lvl = syslog.LOG_NOTICE
+                elif l == 0:
+                    lvl = syslog.LOG_WARNING
+                else:
+                    lvl = syslog.LOG_ERR
+                syslog.syslog(lvl, s)
+
+
     # If the same plugin is used in two places, recycle it
-    authenticate = auth.new(options.debug, config)
+    authenticate = auth.new(log, config)
 
     if userdb == auth:
         homedir = authenticate
     else:
-        homedir = userdb.new(options.debug, config)
+        homedir = userdb.new(log, config)
 
     if storage == auth:
         store = authenticate
     elif storage == userdb:
         store = homedir
     else:
-        store = storage.new(options.debug, config)
+        store = storage.new(log, config)
 
 
     class handler(managesieve.RequestHandler):
-        debug = options.debug
         capabilities = store.capabilities
 
         def __init__(self, *args):
             self.params = {}
             managesieve.RequestHandler.__init__(self, *args)
 
+        def log(self, l, s):
+            log(l, s)
+
         def authenticate(self, username, passwd):
+            self.log(5, "Authenticating %s" % username)
             self.params['username'] = username
             self.params['password'] = passwd
             return authenticate.auth(self.params)
@@ -115,6 +138,7 @@ def main():
 
         if not options.debug:
             daemon.daemon(pidfile=pidfile)
+        syslog.syslog('Starting')
         s.serve_forever()
 
 if __name__ == '__main__':

@@ -22,13 +22,9 @@ class new:
     # Override this
     capabilities = 'fileinto reject'
 
-    def __init__(self, debug, config):
-        self.debug = debug
+    def __init__(self, log_func, config):
+        self.log = log_func
         self.init(config)
-
-    def log(self, lvl, msg):
-        if lvl <= self.debug:
-            print '%s: %s' % (self.__name__, msg)
 
     def init(self, config):
         # Override this

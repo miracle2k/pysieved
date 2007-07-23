@@ -262,3 +262,4 @@ class new(__init__.new):
     def create_storage(self, params):
         return ScriptStorage(self.sievec,
                              self.scripts_dir,
+                             params['homedir'])

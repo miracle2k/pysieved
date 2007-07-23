@@ -22,9 +22,37 @@ import SocketServer
 import socket
 import time
 import os
+import sys
 
 version = "pysieved 0.9+DEV"
 maxsize = 100000
+
+
+def compact_traceback():
+    """Return a compact (1-line) traceback.
+
+    Lifted from asyncore.py from the Python 2.4 distribution.
+
+    """
+
+    t, v, tb = sys.exc_info()
+    tbinfo = []
+    assert tb # Must have a traceback
+    while tb:
+        tbinfo.append((
+            tb.tb_frame.f_code.co_filename,
+            tb.tb_frame.f_code.co_name,
+            str(tb.tb_lineno)
+            ))
+        tb = tb.tb_next
+
+    # just to be safe
+    del tb
+
+    file, function, line = tbinfo[-1]
+    info = ' '.join(['[%s|%s|%s]' % x for x in tbinfo])
+    return (file, function, line), t, v, info
+
 
 class Hangup(Exception):
     pass
@@ -36,8 +64,6 @@ class AuthenticateFirst(Exception):
 
 
 class RequestHandler(SocketServer.BaseRequestHandler):
-    debug = 0
-
     def __init__(self, request, client_address, server):
         self.user = None
         self.storage = None
@@ -47,8 +73,7 @@ class RequestHandler(SocketServer.BaseRequestHandler):
                                                  server)
 
     def log(self, l, s):
-        if self.debug >= l:
-            print time.time(), s
+        print time.time(), "=" * l, s
 
 
     def send(self, *args):
@@ -129,7 +154,7 @@ class RequestHandler(SocketServer.BaseRequestHandler):
         self.write = lambda s: self.request.send(s)
         self.read = lambda n: self.request.recv(n)
 
-        self.log(3, '== Connect from %r' % (self.client_address,))
+        self.log(1, 'Connect from %r' % (self.client_address,))
 
         self.do_capability()
         try:
@@ -150,16 +175,18 @@ class RequestHandler(SocketServer.BaseRequestHandler):
                     func(*cmd[1:])
                 except AuthenticateFirst:
                     self.no(reason='Authenticate first')
-                except TypeError:
-                    self.no(reason='Wrong number of arguments')
-                    if self.debug:
-                        import traceback
-                        traceback.print_exc()
-                    continue
+                except TypeError, exc:
+                    if exc.args[0].startswith('do_') and 'arguments' in exc.args[0]:
+                        self.no(reason='Wrong number of arguments')
+                        continue
+                    else:
+                        raise
 
         except Hangup:
             pass
         except:
+            nil, t, v, tbinfo = compact_traceback()
+            self.log(-1, '[ERROR] %s:%s %s' % (t, v, tbinfo))
             if self.debug:
                 import traceback
                 traceback.print_exc()
@@ -167,7 +194,7 @@ class RequestHandler(SocketServer.BaseRequestHandler):
             raise
 
     def finish(self):
-        self.log(3, '== done')
+        self.log(1, 'Disconnect')
 
 
     def get_command(self):
