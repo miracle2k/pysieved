@@ -19,7 +19,7 @@
 ## USA
 
 
-import storage
+import plugins.accept
 import managesieve
 import unittest
 import thread
@@ -30,38 +30,6 @@ import tempfile
 import config
 
 version = managesieve.version
-
-class DebugScriptStorage(storage.ScriptStorage):
-    def __init__(self):
-        self.scripts = {}
-        self.active = None
-
-    def __setitem__(self, k, v):
-        self.scripts[k] = v
-
-    def __getitem__(self, k):
-        return self.scripts[k]
-
-    def __delitem__(self, k):
-        if self.active == k:
-            raise ValueError('Script is active')
-        del self.scripts[k]
-
-    def __iter__(self):
-        for k in self.scripts:
-            yield k
-
-    def has_key(self, k):
-        return self.scripts.has_key(k)
-
-    def is_active(self, k):
-        return self.active == k
-
-    def set_active(self, k):
-        if k != None and k not in self.scripts:
-            raise KeyError('Unknown script')
-        self.active = k
-
 
 class DebugRequestHandler(managesieve.RequestHandler):
     capabilities = 'fileinto vacation'
@@ -96,7 +64,7 @@ class DebugRequestHandler(managesieve.RequestHandler):
         return None
 
     def new_storage(self, homedir):
-        return DebugScriptStorage()
+        return plugins.accept.ScriptStorage()
 
 
 class StringSock:
@@ -314,7 +282,7 @@ class RegressionInetd(unittest.TestCase):
     """Regression test the whole program"""
 
     def setUp(self):
-        from storage import dovecot
+        from plugins import dovecot
 
         self.buf = ''
 
@@ -418,7 +386,7 @@ class RegressionDaemon(unittest.TestCase):
 
 
     def testOne(self):
-        from storage import dovecot
+        from plugins import dovecot
         import socket
 	import time
 
@@ -435,8 +403,6 @@ class RegressionDaemon(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    from auth.test import *
-    from userdb.test import *
-    from storage.test import *
+    from plugins.test import *
 
     unittest.main()

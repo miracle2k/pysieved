@@ -19,13 +19,23 @@
 ## USA
 
 import __init__
-import warnings
+from crypt import crypt
 
-class new(__init__.Auth):
+class new(__init__.new):
     def init(self, config):
-        self.warn = config.getboolean('Accept', 'warn', True)
+        self.passfile = config.get('htpasswd', 'passwdfile',
+                                   '/etc/exim/virtual/passwd')
 
-    def auth(self, username, passwd):
-        if self.warn:
-            warnings.warn('The "accept" authentication module is for testing only!')
-        return True
+        self.passwd = {}
+        for l in file(self.passfile):
+            parts = l.rstrip().split(':', 1)
+            self.passwd[parts[0]] = parts[1]
+
+    def auth(self, params):
+        try:
+            cpass = self.passwd[params['username']]
+        except KeyError:
+            return False
+
+        return cpass == crypt(password, cpass[:2])
+

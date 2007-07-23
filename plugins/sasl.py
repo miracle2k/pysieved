@@ -27,7 +27,7 @@ def pack(s):
     return struct.pack('!H', len(s)) + s
 
 
-class new(__init__.Auth):
+class new(__init__.new):
     def init(self, config):
         self.mux = config.get('SASL', 'mux', '/var/run/saslauthd/mux')
         self.service = config.get('SASL', 'service', 'pysieved')
@@ -40,8 +40,11 @@ class new(__init__.Auth):
         (n,) = struct.unpack('!H', r)
         return s.recv(n)
 
-    def auth(self, username, passwd):
-        ret = self.sasl(username, passwd, self.service, '')
+    def auth(self, params):
+        ret = self.sasl(params['username'],
+                        params['password'],
+                        self.service,
+                        '')
         self.log(2, 'Auth returns %r' % ret)
         if ret.startswith('OK'):
             return True
@@ -56,4 +59,5 @@ if __name__ == '__main__':
             return default
 
     n = new(C())
-    print n.auth(*sys.argv[1:])
+    print n.auth({'username': sys.argv[1],
+                  'password': sys.argv[2]})

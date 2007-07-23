@@ -22,8 +22,18 @@ import __init__
 import urllib
 import tempfile
 import stat
+import socket
+import base64
 import os
 import popen2
+
+
+
+
+
+####################################
+## Storage stuff
+
 
 def quote(str):
     return urllib.quote(str, '')
@@ -159,16 +169,50 @@ class ScriptStorage(__init__.ScriptStorage):
             os.symlink(fn, self.active)
 
 
-class new(__init__.Factory):
+
+class new(__init__.new):
     capabilities = ('fileinto reject envelope vacation imapflags '
                     'notify subaddress relational '
                     'comparator-i;ascii-numeric')
 
     def init(self, config):
+        self.mux = config.get('Dovecot', 'mux', False)
+        self.service = config.get('Dovecot', 'service', 'pysieved')
         self.sievec = config.get('Dovecot', 'sievec',
                                  '/usr/lib/dovecot/sievec')
         self.scripts_dir = config.get('Dovecot', 'scripts', '.pysieved')
 
-    def create(self, homedir):
-        return ScriptStorage(self.sievec, self.scripts_dir, homedir)
+        # Only try to connect the auth socket if a mux was specified in
+        # the configuration file
+        if self.mux:
+            self.auth_sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            self.auth_sock.connect(self.mux)
+
+        self.pid = os.getpid()
+
+
+    def auth(self, params):
+        handshake_string = self.auth_sock.recv(1024)
+
+        self.auth_sock.sendall('VERSION\t1\t0\nCPID\t%d\n' % self.pid)
+
+        auth_string = ('AUTH\t%d\tPLAIN\tservice=%s\tresp=%s' %
+                       (self.pid,
+                        self.service,
+                        base64.encodestring(params['username'] + '\0' +
+                                            params['username'] + '\0' +
+                                            params['passwd'])))
+        self.auth_sock.sendall(auth_string + '\n')
+        ret = self.auth_sock.recv(1024)
+
+        self.log(2, 'Auth returns %r' % ret)
+        if ret.startswith('OK'):
+            return True
+        return False
+
+
+    def create_storage(self, params):
+        return ScriptStorage(self.sievec,
+                             self.scripts_dir,
+                             params['homedir'])
 

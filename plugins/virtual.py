@@ -3,7 +3,7 @@
 import __init__
 import os
 
-class new(__init__.UserDB):
+class new(__init__.new):
     def init(self, config):
         self.uid = config.getint('Virtual', 'uid', None)
         self.gid = config.getint('Virtual', 'gid', None)
@@ -11,7 +11,8 @@ class new(__init__.UserDB):
         self.hostdirs = config.getboolean('Virtual', 'hostdirs', False)
         assert (self.uid and self.gid and self.base)
 
-    def lookup(self, username):
+    def lookup(self, params):
+        username = params['username']
         if self.hostdirs:
             parts = username.split('@', 1)
             username = os.path.join(parts[1], parts[0])
