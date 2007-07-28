@@ -103,7 +103,7 @@ class RequestHandler(SocketServer.BaseRequestHandler):
         if reason:
             out += ' "%s"' % reason
         out += '\r\n'
-        self.log(3, 'C: %r' % out)
+        self.log(3, 'S: %r' % out)
         self.write(out)
 
 
