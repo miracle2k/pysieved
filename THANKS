@@ -10,3 +10,5 @@ Thanks to:
 * Jonathan Stewart <jonathan@kc8onw.net> for a few bugfixes
 * Philippe Levan <levan@epix.net> for lots of work off the dovecot
   module
+* Christian Rößner <christian@roessner-net.com> for a bugfix to dovecot
+  module

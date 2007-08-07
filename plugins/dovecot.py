@@ -23,7 +23,7 @@ import urllib
 import tempfile
 import stat
 import socket
-import base64
+import binascii
 import os
 import popen2
 
@@ -206,10 +206,10 @@ class new(__init__.new):
         auth_string = ('AUTH\t%d\tPLAIN\tservice=%s\tresp=%s' %
                        (1,
                         self.service,
-                        base64.encodestring(params['username'] + '\0' +
+                        binascii.b2a_base64('\0' +
                                             params['username'] + '\0' +
                                             params['password'])))
-        self.auth_sock.sendall(auth_string + '\n')
+        self.auth_sock.sendall(auth_string)
         ret = self.auth_sock.recv(1024)
 
         self.auth_sock.close();
