@@ -90,6 +90,7 @@ class RequestHandler(SocketServer.BaseRequestHandler):
             elif len(a) > 200 or '"' in a:
                 out.append('{%d+}' % len(a))
                 flush(out)
+                self.log(3, 'S: %r' % a)
                 self.write(a)
             else:
                 out.append('"%s"' % a)
@@ -140,7 +141,7 @@ class RequestHandler(SocketServer.BaseRequestHandler):
             if pos > -1:
                 self.buf = out[pos+2:]
                 s = out[:pos]
-                self.log(3, 'C: %r' % s)
+                self.log(3, 'C: %r' % (s + '\r\n'))
                 return s
             r = self.read(1024)
             if not r:
@@ -252,16 +253,63 @@ class RequestHandler(SocketServer.BaseRequestHandler):
 
         if not self.tls:
             return self.no(code='ENCRYPT-NEEDED')
-        if mechanism.lower() != 'plain':
-            return self.no(reason='Unsupported authentication mechanism')
-        if len(args) != 1:
-            return self.no(reason='Must provide authentication credentials')
 
-        _, user, passwd = args[0].decode('base64').split('\0', 2)
-        if not self.authenticate(user, passwd):
-            return self.no(reason='Bad username or password')
-        home = self.get_homedir(user)
+        # Handle initial exchange
+        ret = self.do_sasl_first(mechanism, *args)
+
+        while ret['result'] == 'CONT':
+            # Server requests more data
+            line = ('{%d+}\r\n' % len(ret['msg']))
+            self.log(3, 'S: %r' % line)
+            self.write(line)
+            line = ('%s\r\n' % ret['msg'])
+            self.log(3, 'S: %r' % line)
+            self.write(line)
+
+            # Read client string
+            s = self.readline()
+            if len(s) > 3 and s[0] == '{' and s[-2:] == '+}':
+                # Literal string
+                try:
+                    n = int(s[1:-2])
+                except ValueError:
+                    # Can't parse length
+                    return self.no(reason='Malformed string literal')
+                else:
+                    s = self.bread(n)
+                    # Data should be followed by CRLF
+                    misc = self.readline()
+                    if len(misc) > 0:
+                        return self.no(reason='Malformed string literal')
+            elif len(s) > 1 and s[0] == '"' and s[-1] == '"':
+                # Quoted string
+                s = s[1:-1]
+            elif s == '*':
+                # A single '*' cancels the exchange
+                return self.no(reason='Authentication cancelled')
+            else:
+                # Neither literal nor quoted
+                return self.no(reason='Malformed string')
+
+            # Process client string
+            ret = self.do_sasl_next(s)
+
+        # Final result
+        if ret['result'] == 'NO':
+            return self.no(reason=ret['msg'])
+        elif ret['result'] == 'BYE':
+            self.bye(reason=ret['msg'])
+            raise Hangup()
+
+        # OK, get storage location for authorized user
+        home = self.get_homedir(ret['username'])
+
+        if not home:
+            self.bye(reason='Server Error')
+            raise Hangup()
+
         self.storage = self.new_storage(home)
+
         return self.ok()
 
 
@@ -293,7 +341,7 @@ class RequestHandler(SocketServer.BaseRequestHandler):
 
         self.send('IMPLEMENTATION', version)
         if self.tls:
-            self.send('SASL', 'PLAIN')
+            self.send('SASL', ' '.join(self.list_mech()))
         else:
             self.send('SASL')
         self.send('SIEVE', self.capabilities)
@@ -363,8 +411,12 @@ class RequestHandler(SocketServer.BaseRequestHandler):
             s = self.storage[name]
         except KeyError:
             return self.no(reason='No script by that name')
-        self.write('{%d+}\r\n' % len(s))
-        self.write(s + '\r\n')
+        line = ('{%d+}\r\n' % len(s))
+        self.log(3, 'S: %r' % line)
+        self.write(line)
+        line = ('%s\r\n' % s)
+        self.log(3, 'S: %r' % line)
+        self.write(line)
         return self.ok()
 
 

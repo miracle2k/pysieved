@@ -115,6 +115,29 @@ def main():
         def log(self, l, s):
             log(l, s)
 
+        def list_mech(self):
+            mechs = authenticate.mechanisms()
+            self.log(5, "Announcing mechanisms : %r" % mechs)
+            return mechs
+
+        def do_sasl_first(self, mechanism, *args):
+            self.log(5, "Starting SASL authentication (%s) : %s" % (mechanism, ' '.join(args)))
+            ret = authenticate.do_sasl_first(mechanism, *args);
+            if ret['result'] == 'CONT':
+                self.log(5, "Need more SASL authentication : %r" % ret)
+            else:
+                self.log(5, "Finished SASL authentication : %r" % ret)
+            return ret
+
+        def do_sasl_next(self, b64_string):
+            self.log(5, "Continuing SASL authentication : %s" % b64_string)
+            ret = authenticate.do_sasl_next(b64_string);
+            if ret['result'] == 'CONT':
+                self.log(5, "Need more SASL authentication : %r" % ret)
+            else:
+                self.log(5, "Finished SASL authentication : %r" % ret)
+            return ret
+
         def authenticate(self, username, passwd):
             self.log(5, "Authenticating %s" % username)
             self.params['username'] = username
