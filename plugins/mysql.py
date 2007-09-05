@@ -42,7 +42,7 @@ class new(__init__.new):
 
     def auth(self, params):
         cursor = self.conn.cursor()
-        cursor.execute(self.query % params)
+        cursor.execute(self.auth_query % params)
         row = cursor.fetchone()
         cursor.close()
 
@@ -54,7 +54,7 @@ class new(__init__.new):
 
     def lookup(self, params):
         cursor = self.conn.cursor()
-        cursor.execute(self.query % params)
+        cursor.execute(self.user_query % params)
         row = cursor.fetchone()
         assert row, 'No results from select (invalid user?)'
         cursor.close()

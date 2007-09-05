@@ -21,6 +21,7 @@
 class new:
     # Override this
     capabilities = 'fileinto reject'
+    mechs = [ 'PLAIN' ]
 
     def __init__(self, log_func, config):
         self.log = log_func
@@ -29,6 +30,47 @@ class new:
     def init(self, config):
         # Override this
         pass
+
+    def mechanisms(self):
+        return self.mechs
+
+    def do_sasl_first(self, mechanism, *args):
+        """Handle the initial part of the SASL dialog
+
+        This is just a wrapper around the auth() method
+        if the requested mechanism is PLAIN.
+
+        Returns a dictionary with the following elements :
+        { 'result': 'OK' (pass), 'NO' (fail), 'BYE' (fatal) or 'CONT' (more),
+          'msg': error string (fail or fatal) or server response (more),
+          'username': authorized username (pass) }
+
+        """
+
+        if mechanism.upper() != 'PLAIN':
+            return {'result': 'NO', 'msg': 'Unsupported authentication mechanism'}
+        if len(args) != 1:
+            return {'result': 'NO', 'msg': 'Must provide authentication credentials'}
+
+        _, user, passwd = args[0].decode('base64').split('\0', 2)
+        params = {'username': user, 'password': passwd}
+        if self.auth(params):
+            return {'result': 'OK', 'username': user}
+        else:
+            return {'result': 'NO', 'msg': 'Bad username or password'}
+
+
+    def do_sasl_next(self, b64_string):
+        """Handle the continuation of the SASL dialog
+
+        Returns a dictionary with the following elements :
+        { 'result': 'OK' (pass), 'NO' (fail), 'BYE' (fatal) or 'CONT' (more),
+          'msg': error string (fail or fatal) or server response (more),
+          'username': authorized username (pass) }
+
+        """
+
+        raise NotImplementedError()
 
 
     def auth(self, params):
