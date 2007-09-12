@@ -13,4 +13,4 @@ Thanks to:
 * Christian Rößner <christian@roessner-net.com> for a bugfix to 
   the dovecot module
 * Konrad Rzentarzewski <konrad.rzentarzewski@artegence.com> for a bugfix to
-  the mysql module
+  the mysql module and an addition to the capabilities announcement

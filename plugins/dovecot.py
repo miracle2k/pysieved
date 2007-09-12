@@ -172,7 +172,7 @@ class ScriptStorage(__init__.ScriptStorage):
 
 class new(__init__.new):
     capabilities = ('fileinto reject envelope vacation imapflags '
-                    'notify subaddress relational '
+                    'notify subaddress relational regex '
                     'comparator-i;ascii-numeric')
     mechs = []
     version = [ 1, 0 ]
@@ -342,7 +342,7 @@ class new(__init__.new):
             self.user_sock.connect(self.master)
             init_string = ('VERSION\t%d\t%d\n' %
                            (self.version[0],
-                           self.version[1]))
+                            self.version[1]))
             self.log(7, '> %r' % init_string)
             self.user_sock.sendall(init_string)
             greet = self.user_sock.recv(1024)
