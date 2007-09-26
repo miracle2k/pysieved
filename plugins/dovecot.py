@@ -23,7 +23,6 @@ import urllib
 import tempfile
 import stat
 import socket
-import base64
 import os
 import popen2
 
@@ -63,6 +62,9 @@ def write_out(sievec, basedir, final, txt):
         raise ValueError(err_str)
     os.rename(script.name, final)
 
+
+def b64_encode(s):
+    return s.encode('base64').replace('\n', '')
 
 class TempFile:
     """Like NamedTemporaryFile but won't complain if unlink fails"""
@@ -172,7 +174,7 @@ class ScriptStorage(__init__.ScriptStorage):
 
 class new(__init__.new):
     capabilities = ('fileinto reject envelope vacation imapflags '
-                    'notify subaddress relational regex '
+                    'notify subaddress relational '
                     'comparator-i;ascii-numeric')
     mechs = []
     version = [ 1, 0 ]
@@ -322,9 +324,9 @@ class new(__init__.new):
     def auth(self, params):
         # Refer to do_sasl_first
         ret = self.do_sasl_first('PLAIN',
-                                 base64.encodestring('\0' +
-                                                     params['username'] + '\0' +
-                                                     params['password']))
+                                 b64_encode('\0' +
+                                            params['username'] + '\0' +
+                                            params['password']))
 
         if ret['result'].startswith('OK'):
             return True

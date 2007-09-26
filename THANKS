@@ -14,3 +14,7 @@ Thanks to:
   the dovecot module
 * Konrad Rzentarzewski <konrad.rzentarzewski@artegence.com> for a bugfix to
   the mysql module and an addition to the capabilities announcement
+* Paweł Andziak <ganda@ganda.pl> for a bug report and potential fix
+* Florian Heinle <florian-pysieved@planet-tiax.de> for a bug report that
+  led to removal of Konrad's capabilities addition :)
+
