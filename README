@@ -8,19 +8,6 @@ I wrote this so I could use avelsieve (SquirrelMail) with Postfix
 and Dovecot.  It should work with other managesieve clients too.
 Please share with me your successes and failures.
 
-Download
---------
-
-You can get the latest version [as
-a tarball](http://woozle.org/~neale/projects/?p=pysieved;a=snapshot;h=HEAD),
-or [with cogito](http://woozle.org/~neale/projects/?p=pysieved):
-
-    cg-clone http://woozle.org/~neale/projects/pysieved
-
-Version 1.0 may come out eventually (needs logging and more testing),
-but don't let that scare you away from trying it.  Many people are using
-the current version to great success.
-
 
 Plugin architecture
 -------------------
@@ -52,8 +39,27 @@ existing code, so you don't have to worry about things like the
 managesieve protocol or forking.
 
 
-Installing
-----------
+Download
+--------
+
+You can get the latest version [as
+a tarball](http://woozle.org/~neale/projects/?p=pysieved;a=snapshot;h=HEAD),
+or with git:
+
+    git clone http://woozle.org/~neale/projects/pysieved
+
+A [web view of revisions](http://woozle.org/~neale/projects/?p=pysieved) is
+also available for those without git.
+
+[Version 1.0
+RC1](http://woozle.org/~neale/projects/?p=pysieved;a=commit;h=1.0-RC1)
+was released on September 26, 2007.  This is a release candidate, and if
+no bugs are found after testing from members of the mail list, this will
+become version 1.0.
+
+
+Installation
+------------
 
 Put all the files somewhere.  I put mine in /usr/local/lib/pysieved.
 Copy pysieved.ini into /usr/local/etc/, and edit to taste.  It's
@@ -68,11 +74,14 @@ To run as a daemon, just run
     python pysieved.py
 
 
-Testing
--------
 
-There is a big beefy test suite, but some tests might fail on your
-system because they rely on the way mine is set up.  Don't panic.
+
+Mail list
+---------
+
+If you use pysieved, please join the pysieved mail list by emailing
+[pysieved-subscribe@woozle.org](mailto:pysieved-subscribe@woozle.org) or
+visiting the [subscription page](http://woozle.org/lists/pysieved).
 
 
 

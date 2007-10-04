@@ -24,7 +24,7 @@ import time
 import os
 import sys
 
-version = "pysieved 0.91"
+version = "pysieved 0.91+DEV"
 maxsize = 100000
 
 
@@ -309,6 +309,8 @@ class RequestHandler(SocketServer.BaseRequestHandler):
             raise Hangup()
 
         self.storage = self.new_storage(home)
+
+        self.log(1, 'Authenticated user %s' % ret['username'])
 
         return self.ok()
 

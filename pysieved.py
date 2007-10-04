@@ -40,6 +40,9 @@ def main():
     parser.add_option('-l', '--port',
                       help='What port to run on (default 2000)',
                       action='store', dest='port', default=None, type='int')
+    parser.add_option('-b', '--bindaddr',
+                      help='What IP address to bind to (default all)',
+                      action='store', dest='bindaddr', default=None, type='str')
     parser.add_option('-p', '--pidfile',
                       help='Where to write a PID file',
                       action='store', dest='pidfile', default=None)
@@ -59,6 +62,7 @@ def main():
     config = Config(options.config)
 
     port = options.port or config.getint('main', 'port', 2000)
+    addr = options.addr or config.get('main', 'bindaddr', '')
     pidfile = options.pidfile or config.get('main', 'pidfile',
                                             '/var/run/pysieved.pid')
 
