@@ -123,3 +123,40 @@ master.cf :
     flags=DRhu user=vmail:vmail
     argv=/usr/local/libexec/dovecot/deliver -f $sender -d $recipient
 
+
+
+If the home directory is the Maildir
+------------------------------------
+
+You may have a setup where your users' home directories are their
+Maildirs.  In this case, dovecot IMAPd will show "pysieved" and
+"dovecot.sieve" folders.  There are several solutions to this problem,
+as detailed in [this email by Phillipe
+Levan](http://woozle.org/list-archives/pysieved/msg00155.html):
+
+> A few options to not show a .dovecot.sieve file :
+>
+> 1. define a Dovecot home directory != mail directory
+>    e.g. :
+>        home resolved via userdb and
+>        mail_location = maildir:~/Maildir
+>    (http://wiki.dovecot.org/VirtualUsers#homedirs)
+>
+> 2. configure a "sieve" variable or return a "sieve" extra field
+>    during userdb lookup pointing to an alternate name/location
+>    e.g. :
+>        plugin {
+>                sieve = dovecot.sieve
+>        }
+>    (http://wiki.dovecot.org/LDA/Sieve)
+>
+> 3. hack the code in dovecot-sieve-X.X.X/src/cmusieve-plugin.c line 11
+>    e.g. :
+>        #define SIEVE_SCRIPT_PATH "~/dovecot.sieve"
+
+The latter two require modifying the "active" value in the [Dovecot]
+section of the configuration file:
+
+    [Dovecot]
+    active = dovecot.sieve
+

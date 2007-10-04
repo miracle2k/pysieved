@@ -92,12 +92,13 @@ class TempFile:
 
 
 class ScriptStorage(__init__.ScriptStorage):
-    def __init__(self, sievec, mydir, homedir):
+    def __init__(self, sievec, mydir, active_file, homedir):
         self.sievec = sievec
         self.mydir = mydir
+        self.activefile = active_file
         self.homedir = homedir
         self.basedir = os.path.join(self.homedir, self.mydir)
-        self.active = os.path.join(self.homedir, '.dovecot.sieve')
+        self.active = os.path.join(self.homedir, self.active_file)
 
         # Create our directory if needed
         if not os.path.exists(self.basedir):
@@ -186,6 +187,7 @@ class new(__init__.new):
         self.sievec = config.get('Dovecot', 'sievec',
                                  '/usr/lib/dovecot/sievec')
         self.scripts_dir = config.get('Dovecot', 'scripts', '.pysieved')
+        self.active_file = config.get('Dovecot', 'active', '.dovecot.sieve')
         self.uid = config.getint('Dovecot', 'uid', None)
         self.gid = config.getint('Dovecot', 'gid', None)
 
@@ -393,4 +395,5 @@ class new(__init__.new):
     def create_storage(self, params):
         return ScriptStorage(self.sievec,
                              self.scripts_dir,
+                             self.active_file,
                              params['homedir'])

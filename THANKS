@@ -8,8 +8,11 @@ Thanks to:
 * David Anderson <dovecot@dw-perspective.org.uk> for the initial
   htpasswd2 module, and a tip about the Dovecot Authentication Protocol
 * Jonathan Stewart <jonathan@kc8onw.net> for a few bugfixes
-* Philippe Levan <levan@epix.net> for lots of work off the dovecot
-  module, including implementing real SASL
+* Philippe Levan <levan@epix.net> for:
+  * lots of work off the dovecot module, including implementing real SASL
+  * providing better technical support than I do on the mail list
+  * the "activefile" patch to work around dotfile symlinks with Dovecot
+    IMAPd
 * Christian Rößner <christian@roessner-net.com> for a bugfix to 
   the dovecot module
 * Konrad Rzentarzewski <konrad.rzentarzewski@artegence.com> for a bugfix to
