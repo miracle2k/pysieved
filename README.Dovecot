@@ -9,10 +9,10 @@ dovecot.conf :
   auth default {
     socket listen {
       client {
-        path = /var/spool/postfix/auth/dovecot
+        path = /var/run/dovecot/auth-client
         mode = 0666
         user = postfix
-        group = postfix
+        group = mail
       }
     }
   }
