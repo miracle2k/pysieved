@@ -13,6 +13,8 @@ Thanks to:
   * providing better technical support than I do on the mail list
   * the "activefile" patch to work around dotfile symlinks with Dovecot
     IMAPd
+  * fixing a really awful "bindaddr" patch I created and didn't test
+  * fixing up README.Dovecot to address selinux permission problems
 * Christian Rößner <christian@roessner-net.com> for a bugfix to 
   the dovecot module
 * Konrad Rzentarzewski <konrad.rzentarzewski@artegence.com> for a bugfix to
@@ -20,4 +22,5 @@ Thanks to:
 * Paweł Andziak <ganda@ganda.pl> for a bug report and potential fix
 * Florian Heinle <florian-pysieved@planet-tiax.de> for a bug report that
   led to removal of Konrad's capabilities addition :)
+* Farkas Levente <lfarkas@bppiac.hu> for the RPM spec file
 

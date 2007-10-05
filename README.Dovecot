@@ -10,16 +10,14 @@ dovecot.conf :
     socket listen {
       client {
         path = /var/run/dovecot/auth-client
-        mode = 0666
-        user = postfix
-        group = mail
+        mode = 0660
       }
     }
   }
 
 pysieved.ini :
   [Dovecot]
-  mux = /var/spool/postfix/auth/dovecot
+  mux = /var/run/dovecot/auth-client
 
 
 
@@ -36,8 +34,6 @@ dovecot.conf :
       master {
         path = /var/run/dovecot/auth-master
         mode = 0600
-        user = vmail
-        group = vmail
       }
     }
   }
@@ -60,42 +56,70 @@ pysieved.ini :
   uid=1000
   gid=100
 
-In that case, special care may be needed so that pysieved can
-access the 'mux' and 'master' sockets (and write the pidfile).
+If you do not intend to run pysieved as non-root, skip directly
+to the next section.
 
-The pidfile can be moved to a directory that is writeable
-by the specified uid/gid, e.g. :
+Otherwise, special care may be needed so that pysieved can access
+the 'mux' and 'master' sockets (and write the pidfile) : read on !
+
+
+The pidfile can be moved to a directory that is writeable by the
+specified uid/gid, e.g. :
 
 pysieved.ini :
   [main]
   pidfile = /var/run/pysieved/pysieved.pid
 
+
 The Dovecot client socket (mux) can safely be exported with 0666
-permissions. But a common scenario places that socket inside the
-Postfix chroot area, as /var/spool/postfix/private/auth where
-the private directory is accessible only by the postfix user. 
-Moving it to a different, public, directory should work just as
-well, e.g. :
+permissions if the default value of 0660 does not work.
+
+
+........ BEGIN WARNING : Postfix + Dovecot SASL ........
+
+If you use Postfix + Dovecot SASL, a common scenario places
+the client socket inside the Postfix chroot area, as
+/var/spool/postfix/private/auth where the private directory
+is accessible only by the postfix user. 
+You MUST move it to a different, public, directory if you want
+to use pysieved with Dovecot authentication and restricted
+uid/gid. E.g. :
 
 dovecot.conf :
   auth default {
     socket listen {
       client {
-        path = /var/spool/postfix/auth/dovecot
+        path = /var/run/dovecot/auth-client
         mode = 0666
-        user = postfix
-        group = postfix
       }
     }
   }
 
 pysieved.ini :
   [Dovecot]
-  mux = /var/spool/postfix/auth/dovecot
+  mux = /var/run/dovecot/auth-client
 
 main.cf :
   smtpd_sasl_type = dovecot
-  smtpd_sasl_path = auth/dovecot
+  smtpd_sasl_path = /var/run/dovecot/auth-client
+
+master.cf:
+  # service type  private unpriv  chroot  wakeup  maxproc command + args
+  smtp    inet    n       -       n       -       -       smtpd
+
+Note that if the socket is not under /var/spool/postfix you
+cannot chroot smtpd, hence the master.cf line above.
+
+If you insist on chrooting smtpd, place the socket under
+/var/spool/postfix but outside of the private directory
+and use a relative smtpd_sasl_path. E.g. :
+
+smtpd_sasl_path = auth/dovecot
+
+for a socket located at /var/spool/postfix/auth/dovecot.
+
+........ END WARNING : Postfix + Dovecot SASL ........
+
 
 As for the master socket, it can have restrictive permissions,
 as recommended in the Dovecot documentation, if you make it
