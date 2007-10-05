@@ -42,7 +42,7 @@ def main():
                       action='store', dest='port', default=None, type='int')
     parser.add_option('-b', '--bindaddr',
                       help='What IP address to bind to (default all)',
-                      action='store', dest='bindaddr', default=None, type='str')
+                      action='store', dest='bindaddr', default=None)
     parser.add_option('-p', '--pidfile',
                       help='Where to write a PID file',
                       action='store', dest='pidfile', default=None)
@@ -62,7 +62,7 @@ def main():
     config = Config(options.config)
 
     port = options.port or config.getint('main', 'port', 2000)
-    addr = options.addr or config.get('main', 'bindaddr', '')
+    addr = options.bindaddr or config.get('main', 'bindaddr', '')
     pidfile = options.pidfile or config.get('main', 'pidfile',
                                             '/var/run/pysieved.pid')
 
@@ -162,11 +162,11 @@ def main():
     else:
         import daemon
 
-        s = Server(('', port), handler)
+        s = Server((addr, port), handler)
 
         if not options.debug:
             daemon.daemon(pidfile=pidfile)
-        syslog.syslog('Starting')
+        log(1, 'Listening on %s port %d' % (addr or "INADDR_ANY", port))
         s.serve_forever()
 
 if __name__ == '__main__':
