@@ -95,7 +95,7 @@ class ScriptStorage(__init__.ScriptStorage):
     def __init__(self, sievec, mydir, active_file, homedir):
         self.sievec = sievec
         self.mydir = mydir
-        self.activefile = active_file
+        self.active_file = active_file
         self.homedir = homedir
         self.basedir = os.path.join(self.homedir, self.mydir)
         self.active = os.path.join(self.homedir, self.active_file)
