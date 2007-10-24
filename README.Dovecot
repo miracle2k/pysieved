@@ -10,7 +10,7 @@ dovecot.conf :
     socket listen {
       client {
         path = /var/run/dovecot/auth-client
-        mode = 0660
+        mode = 0666
       }
     }
   }
@@ -147,7 +147,9 @@ master.cf :
     flags=DRhu user=vmail:vmail
     argv=/usr/local/libexec/dovecot/deliver -f $sender -d $recipient
 
-
+User vmail and group vmail should be replaced with the correct names for
+the uid/gid that owns the virtual mail storage.  Pysieved should also
+run with this uid/gid.
 
 If the home directory is the Maildir
 ------------------------------------
