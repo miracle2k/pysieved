@@ -9,17 +9,15 @@ dovecot.conf :
   auth default {
     socket listen {
       client {
-        path = /var/spool/postfix/auth/dovecot
+        path = /var/run/dovecot/auth-client
         mode = 0666
-        user = postfix
-        group = postfix
       }
     }
   }
 
 pysieved.ini :
   [Dovecot]
-  mux = /var/spool/postfix/auth/dovecot
+  mux = /var/run/dovecot/auth-client
 
 
 
@@ -36,8 +34,6 @@ dovecot.conf :
       master {
         path = /var/run/dovecot/auth-master
         mode = 0600
-        user = vmail
-        group = vmail
       }
     }
   }
@@ -60,42 +56,70 @@ pysieved.ini :
   uid=1000
   gid=100
 
-In that case, special care may be needed so that pysieved can
-access the 'mux' and 'master' sockets (and write the pidfile).
+If you do not intend to run pysieved as non-root, skip directly
+to the next section.
 
-The pidfile can be moved to a directory that is writeable
-by the specified uid/gid, e.g. :
+Otherwise, special care may be needed so that pysieved can access
+the 'mux' and 'master' sockets (and write the pidfile) : read on !
+
+
+The pidfile can be moved to a directory that is writeable by the
+specified uid/gid, e.g. :
 
 pysieved.ini :
   [main]
   pidfile = /var/run/pysieved/pysieved.pid
 
+
 The Dovecot client socket (mux) can safely be exported with 0666
-permissions. But a common scenario places that socket inside the
-Postfix chroot area, as /var/spool/postfix/private/auth where
-the private directory is accessible only by the postfix user. 
-Moving it to a different, public, directory should work just as
-well, e.g. :
+permissions if the default value of 0660 does not work.
+
+
+........ BEGIN WARNING : Postfix + Dovecot SASL ........
+
+If you use Postfix + Dovecot SASL, a common scenario places
+the client socket inside the Postfix chroot area, as
+/var/spool/postfix/private/auth where the private directory
+is accessible only by the postfix user. 
+You MUST move it to a different, public, directory if you want
+to use pysieved with Dovecot authentication and restricted
+uid/gid. E.g. :
 
 dovecot.conf :
   auth default {
     socket listen {
       client {
-        path = /var/spool/postfix/auth/dovecot
+        path = /var/run/dovecot/auth-client
         mode = 0666
-        user = postfix
-        group = postfix
       }
     }
   }
 
 pysieved.ini :
   [Dovecot]
-  mux = /var/spool/postfix/auth/dovecot
+  mux = /var/run/dovecot/auth-client
 
 main.cf :
   smtpd_sasl_type = dovecot
-  smtpd_sasl_path = auth/dovecot
+  smtpd_sasl_path = /var/run/dovecot/auth-client
+
+master.cf:
+  # service type  private unpriv  chroot  wakeup  maxproc command + args
+  smtp    inet    n       -       n       -       -       smtpd
+
+Note that if the socket is not under /var/spool/postfix you
+cannot chroot smtpd, hence the master.cf line above.
+
+If you insist on chrooting smtpd, place the socket under
+/var/spool/postfix but outside of the private directory
+and use a relative smtpd_sasl_path. E.g. :
+
+smtpd_sasl_path = auth/dovecot
+
+for a socket located at /var/spool/postfix/auth/dovecot.
+
+........ END WARNING : Postfix + Dovecot SASL ........
+
 
 As for the master socket, it can have restrictive permissions,
 as recommended in the Dovecot documentation, if you make it
@@ -122,4 +146,43 @@ master.cf :
   dovecot         unix    -       n       n       -       -       pipe
     flags=DRhu user=vmail:vmail
     argv=/usr/local/libexec/dovecot/deliver -f $sender -d $recipient
+
+User vmail and group vmail should be replaced with the correct names for
+the uid/gid that owns the virtual mail storage.  Pysieved should also
+run with this uid/gid.
+
+If the home directory is the Maildir
+------------------------------------
+
+You may have a setup where your users' home directories are their
+Maildirs.  In this case, dovecot IMAPd will show "pysieved" and
+"dovecot.sieve" folders.  There are several solutions to this problem,
+as detailed in [this email by Phillipe
+Levan](http://woozle.org/list-archives/pysieved/msg00155.html):
+
+> A few options to not show a .dovecot.sieve file :
+>
+> 1. define a Dovecot home directory != mail directory
+>    e.g. :
+>        home resolved via userdb and
+>        mail_location = maildir:~/Maildir
+>    (http://wiki.dovecot.org/VirtualUsers#homedirs)
+>
+> 2. configure a "sieve" variable or return a "sieve" extra field
+>    during userdb lookup pointing to an alternate name/location
+>    e.g. :
+>        plugin {
+>                sieve = dovecot.sieve
+>        }
+>    (http://wiki.dovecot.org/LDA/Sieve)
+>
+> 3. hack the code in dovecot-sieve-X.X.X/src/cmusieve-plugin.c line 11
+>    e.g. :
+>        #define SIEVE_SCRIPT_PATH "~/dovecot.sieve"
+
+The latter two require modifying the "active" value in the [Dovecot]
+section of the configuration file:
+
+    [Dovecot]
+    active = dovecot.sieve
 

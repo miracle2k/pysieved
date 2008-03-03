@@ -1,0 +1,2 @@
+* Figure out why sieveshell (from cyrus) doesn't like what we send it.
+* Does daemon mode really leave zombies?
