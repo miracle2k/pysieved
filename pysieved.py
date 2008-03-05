@@ -56,6 +56,9 @@ def main():
     parser.add_option('-d', '--debug',
                       help='Log to stderr',
                       action='store_true', dest='debug', default=False)
+    parser.add_option('-B', '--base',
+                      help='Mail base directory',
+                      action='store', dest='base', default=None)
     (options, args) = parser.parse_args()
 
     # Read config file
@@ -65,6 +68,7 @@ def main():
     addr = options.bindaddr or config.get('main', 'bindaddr', '')
     pidfile = options.pidfile or config.get('main', 'pidfile',
                                             '/var/run/pysieved.pid')
+    base = options.base or config.get('main', 'base', None)
 
     ##
     ## Import plugins
@@ -150,7 +154,12 @@ def main():
 
         def get_homedir(self, username):
             self.params['username'] = username
-            return homedir.lookup(self.params)
+            ret = homedir.lookup(self.params)
+            self.log(5, "Plugin returned home : %r" % ret)
+            if ret and not os.path.isabs(ret) and base:
+                ret = os.path.join(base, ret)
+                self.log(5, "Added base to home : %r" % ret)
+            return ret
 
         def new_storage(self, homedir):
             self.params['homedir'] = homedir
