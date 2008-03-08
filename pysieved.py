@@ -26,6 +26,11 @@ import managesieve
 import syslog
 import sys
 from config import Config
+try:
+    from tlslite.api import *
+    have_tls = True
+except:
+    have_tls = False
 
 
 class Server(SocketServer.ForkingTCPServer):
@@ -81,6 +86,26 @@ def main():
     tls_required = options.tls_required or config.getboolean('TLS', 'required', False)
     tls_key = options.tls_key or config.get('TLS', 'key', '')
     tls_cert = options.tls_cert or config.get('TLS', 'cert', '')
+
+
+    # Load TLS key and cert
+    if have_tls and tls_key and tls_cert:
+        try:
+            tls_read_cert = open(tls_cert).read()
+            tls_x509 = X509()
+            tls_x509.parse(tls_read_cert)
+            tls_certChain = X509CertChain([tls_x509])
+            tls_read_key = open(tls_key).read()
+            tls_privateKey = parsePEMKey(tls_read_key, private=True)
+        except:
+            tls_required = False
+            tls_privateKey = None
+            tls_certChain = None
+    else:
+        tls_required = False
+        tls_privateKey = None
+        tls_certChain = None
+
 
     ##
     ## Import plugins
@@ -179,8 +204,8 @@ def main():
 
         def get_tls_params(self):
             return {'required': tls_required,
-                    'key': tls_key,
-                    'cert': tls_cert}
+                    'key': tls_privateKey,
+                    'cert': tls_certChain}
 
     if options.stdin:
         sock = socket.fromfd(0, socket.AF_INET, socket.SOCK_STREAM)

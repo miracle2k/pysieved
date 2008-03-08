@@ -73,27 +73,7 @@ class RequestHandler(SocketServer.BaseRequestHandler):
         self.user = None
         self.storage = None
         self.tls = None
-        if have_tls:
-            self.tls_params = self.get_tls_params()
-
-            try:
-		self.certFile = open(self.tls_params['cert']).read()
-		self.x509 = X509()
-		self.x509.parse(self.certFile)
-		self.certChain = X509CertChain([self.x509])
-		self.keyFile = open(self.tls_params['key']).read()
-		self.privateKey = parsePEMKey(self.keyFile, private=True)
-            except:
-                import traceback
-                traceback.print_exc()
-		self.tls_params = {'required': False,
-                                   'key': None,
-                                   'cert': None}
-        else:
-            self.tls_params = {'required': False,
-                               'key': None,
-                               'cert': None}
-
+        self.tls_params = self.get_tls_params()
         SocketServer.BaseRequestHandler.__init__(self,
                                                  request,
                                                  client_address,
@@ -351,8 +331,8 @@ class RequestHandler(SocketServer.BaseRequestHandler):
         try:
             self.buf = ''
             self.tls = TLSConnection(self.request)
-            self.tls.handshakeServer(certChain=self.certChain,
-                                     privateKey=self.privateKey,
+            self.tls.handshakeServer(certChain=self.tls_params['cert'],
+                                     privateKey=self.tls_params['key'],
                                      reqCert=False)
             self.write = lambda s: self.tls.write(s)
             self.read = lambda n: self.tls.read(n)
