@@ -59,6 +59,15 @@ def main():
     parser.add_option('-B', '--base',
                       help='Mail base directory',
                       action='store', dest='base', default='')
+    parser.add_option('-T', '--tls',
+                      help='STARTTLS required before authentication',
+                      action='store', dest='tls_required', default=False)
+    parser.add_option('-K', '--key',
+                      help='TLS private key file',
+                      action='store', dest='tls_key', default='')
+    parser.add_option('-C', '--cert',
+                      help='TLS certificate file',
+                      action='store', dest='tls_cert', default='')
     (options, args) = parser.parse_args()
 
     # Read config file
@@ -69,6 +78,9 @@ def main():
     pidfile = options.pidfile or config.get('main', 'pidfile',
                                             '/var/run/pysieved.pid')
     base = options.base or config.get('main', 'base', '')
+    tls_required = options.tls_required or config.getboolean('TLS', 'required', False)
+    tls_key = options.tls_key or config.get('TLS', 'key', '')
+    tls_cert = options.tls_cert or config.get('TLS', 'cert', '')
 
     ##
     ## Import plugins
@@ -164,6 +176,11 @@ def main():
         def new_storage(self, homedir):
             self.params['homedir'] = homedir
             return store.create_storage(self.params)
+
+        def get_tls_params(self):
+            return {'required': tls_required,
+                    'key': tls_key,
+                    'cert': tls_cert}
 
     if options.stdin:
         sock = socket.fromfd(0, socket.AF_INET, socket.SOCK_STREAM)

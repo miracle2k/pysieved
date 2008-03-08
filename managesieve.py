@@ -23,6 +23,11 @@ import socket
 import time
 import os
 import sys
+try:
+    from tlslite.api import *
+    have_tls = True
+except:
+    have_tls = False
 
 version = "pysieved 0.91+DEV"
 maxsize = 100000
@@ -67,6 +72,28 @@ class RequestHandler(SocketServer.BaseRequestHandler):
     def __init__(self, request, client_address, server):
         self.user = None
         self.storage = None
+        self.tls = None
+        if have_tls:
+            self.tls_params = self.get_tls_params()
+
+            try:
+		self.certFile = open(self.tls_params['cert']).read()
+		self.x509 = X509()
+		self.x509.parse(self.certFile)
+		self.certChain = X509CertChain([self.x509])
+		self.keyFile = open(self.tls_params['key']).read()
+		self.privateKey = parsePEMKey(self.keyFile, private=True)
+            except:
+                import traceback
+                traceback.print_exc()
+		self.tls_params = {'required': False,
+                                   'key': None,
+                                   'cert': None}
+        else:
+            self.tls_params = {'required': False,
+                               'key': None,
+                               'cert': None}
+
         SocketServer.BaseRequestHandler.__init__(self,
                                                  request,
                                                  client_address,
@@ -150,7 +177,6 @@ class RequestHandler(SocketServer.BaseRequestHandler):
 
 
     def handle(self):
-        self.tls = True
         self.buf = ''
         self.write = lambda s: self.request.send(s)
         self.read = lambda n: self.request.recv(n)
@@ -248,7 +274,7 @@ class RequestHandler(SocketServer.BaseRequestHandler):
 
         assert not self.storage, 'Already authenticated'
 
-        if not self.tls:
+        if self.tls_params['required'] and not self.tls:
             return self.no(code='ENCRYPT-NEEDED')
 
         # Handle initial exchange
@@ -315,13 +341,21 @@ class RequestHandler(SocketServer.BaseRequestHandler):
     def do_starttls(self):
         "2.2.  STARTTLS Command"
 
+        assert not self.storage, 'Already authenticated'
+        assert have_tls, 'No TLS support'
+        assert self.tls_params['key'], 'Undefined TLS private key'
+        assert self.tls_params['cert'], 'Undefined TLS certificate'
+
+        self.ok(reason='Begin TLS negotiation now')
+
         try:
             self.buf = ''
-            self.tls = socket.ssl(self.request,
-                                  '/etc/ssl/private/woozle.org.key',
-                                  '/etc/ssl/private/woozle.org.pem')
-            self.write = self.tls.write
-            self.read = self.tls.read
+            self.tls = TLSConnection(self.request)
+            self.tls.handshakeServer(certChain=self.certChain,
+                                     privateKey=self.privateKey,
+                                     reqCert=False)
+            self.write = lambda s: self.tls.write(s)
+            self.read = lambda n: self.tls.read(n)
             return self.do_capability()
         except:
             import traceback
@@ -339,12 +373,12 @@ class RequestHandler(SocketServer.BaseRequestHandler):
         "2.4.  CAPABILITY Command"
 
         self.send('IMPLEMENTATION', version)
-        if self.tls:
+        if self.tls or not self.tls_params['required']:
             self.send('SASL', ' '.join(self.list_mech()))
         else:
             self.send('SASL')
         self.send('SIEVE', self.capabilities)
-        if not self.tls:
+        if self.tls_params['key'] and self.tls_params['cert'] and not self.tls:
             self.send('STARTTLS')
         self.ok()
 
@@ -448,6 +482,11 @@ class RequestHandler(SocketServer.BaseRequestHandler):
 
     def new_storage(self, homedir):
         raise NotImplementedError()
+
+    def get_tls_params(self):
+        return {'required': False,
+                'key': None,
+                'cert': None}
 
 
 
