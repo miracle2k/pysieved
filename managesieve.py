@@ -431,5 +431,23 @@ class RequestHandler(SocketServer.BaseRequestHandler):
             return self.no(reason='No script by that name')
         return self.ok()
 
+    def list_mech(self):
+        raise NotImplementedError()
+
+    def do_sasl_first(self, mechanism, *args):
+        raise NotImplementedError()
+
+    def do_sasl_next(self, b64_string):
+        raise NotImplementedError()
+
+    def authenticate(self, username, passwd):
+        raise NotImplementedError()
+
+    def get_homedir(self, username):
+        raise NotImplementedError()
+
+    def new_storage(self, homedir):
+        raise NotImplementedError()
+
 
 
