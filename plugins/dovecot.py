@@ -188,8 +188,8 @@ class new(__init__.new):
                                  '/usr/lib/dovecot/sievec')
         self.scripts_dir = config.get('Dovecot', 'scripts', '.pysieved')
         self.active_file = config.get('Dovecot', 'active', '.dovecot.sieve')
-        self.uid = config.getint('Dovecot', 'uid', None)
-        self.gid = config.getint('Dovecot', 'gid', None)
+        self.uid = config.getint('Dovecot', 'uid', -1)
+        self.gid = config.getint('Dovecot', 'gid', -1)
 
         # Drop privileges here if all users share the same uid/gid
         if self.gid >= 0:
