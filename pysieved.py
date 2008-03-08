@@ -58,7 +58,7 @@ def main():
                       action='store_true', dest='debug', default=False)
     parser.add_option('-B', '--base',
                       help='Mail base directory',
-                      action='store', dest='base', default=None)
+                      action='store', dest='base', default='')
     (options, args) = parser.parse_args()
 
     # Read config file
@@ -68,7 +68,7 @@ def main():
     addr = options.bindaddr or config.get('main', 'bindaddr', '')
     pidfile = options.pidfile or config.get('main', 'pidfile',
                                             '/var/run/pysieved.pid')
-    base = options.base or config.get('main', 'base', None)
+    base = options.base or config.get('main', 'base', '')
 
     ##
     ## Import plugins
