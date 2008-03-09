@@ -95,7 +95,7 @@ class RequestHandler(SocketServer.BaseRequestHandler):
             if type(a) == type(()):
                 out.append(' '.join(a))
             elif len(a) > 200 or '"' in a:
-                out.append('{%d+}' % len(a))
+                out.append('{%d}' % len(a))
                 flush(out)
                 self.log(3, 'S: %r' % a)
                 self.write(a)
@@ -262,7 +262,7 @@ class RequestHandler(SocketServer.BaseRequestHandler):
 
         while ret['result'] == 'CONT':
             # Server requests more data
-            line = ('{%d+}\r\n' % len(ret['msg']))
+            line = ('{%d}\r\n' % len(ret['msg']))
             self.log(3, 'S: %r' % line)
             self.write(line)
             line = ('%s\r\n' % ret['msg'])
@@ -424,7 +424,7 @@ class RequestHandler(SocketServer.BaseRequestHandler):
             s = self.storage[name]
         except KeyError:
             return self.no(reason='No script by that name')
-        line = ('{%d+}\r\n' % len(s))
+        line = ('{%d}\r\n' % len(s))
         self.log(3, 'S: %r' % line)
         self.write(line)
         line = ('%s\r\n' % s)
