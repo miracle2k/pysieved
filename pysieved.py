@@ -66,7 +66,7 @@ def main():
                       action='store', dest='base', default='')
     parser.add_option('-T', '--tls',
                       help='STARTTLS required before authentication',
-                      action='store', dest='tls_required', default=False)
+                      action='store_true', dest='tls_required', default=False)
     parser.add_option('-K', '--key',
                       help='TLS private key file',
                       action='store', dest='tls_key', default='')
@@ -86,36 +86,7 @@ def main():
     tls_required = options.tls_required or config.getboolean('TLS', 'required', False)
     tls_key = options.tls_key or config.get('TLS', 'key', '')
     tls_cert = options.tls_cert or config.get('TLS', 'cert', '')
-
-
-    # Load TLS key and cert
-    if have_tls and tls_key and tls_cert:
-        try:
-            tls_read_cert = open(tls_cert).read()
-            tls_x509 = X509()
-            tls_x509.parse(tls_read_cert)
-            tls_certChain = X509CertChain([tls_x509])
-            tls_read_key = open(tls_key).read()
-            tls_privateKey = parsePEMKey(tls_read_key, private=True)
-        except:
-            tls_required = False
-            tls_privateKey = None
-            tls_certChain = None
-    else:
-        tls_required = False
-        tls_privateKey = None
-        tls_certChain = None
-
-
-    ##
-    ## Import plugins
-    ##
-    auth = __import__('plugins.%s' % config.get('main', 'auth', 'SASL').lower(),
-                      None, None, True)
-    userdb = __import__('plugins.%s' % config.get('main', 'userdb', 'passwd').lower(),
-                      None, None, True)
-    storage = __import__('plugins.%s' % config.get('main', 'storage', 'Dovecot').lower(),
-                         None, None, True)
+    tls_passphrase = config.get('TLS', 'passphrase', '')
 
 
     # Define the log function
@@ -132,6 +103,50 @@ def main():
                 else:
                     lvl = syslog.LOG_ERR
                 syslog.syslog(lvl, s)
+
+
+    # Load TLS key and cert
+    tls_privateKey = None
+    tls_certChain = None
+    if tls_key or tls_cert:
+        # Expect to use TLS
+        if not have_tls:
+            log(1, "TLSLite is not available. STARTTLS will not be offered")
+            tls_required = False
+        elif not tls_key:
+            log(1, "Cannot enable TLS without a key. STARTTLS will not be offered")
+            tls_required = False
+        elif not tls_cert:
+            log(1, "Cannot enable TLS without a certificate. STARTTLS will not be offered")
+            tls_required = False
+        else:
+            try:
+                tls_read_cert = open(tls_cert).read()
+                tls_x509 = X509()
+                tls_x509.parse(tls_read_cert)
+                tls_certChain = X509CertChain([tls_x509])
+                tls_read_key = open(tls_key).read()
+
+                def passphrase():
+                    return tls_passphrase
+
+                tls_privateKey = parsePEMKey(tls_read_key, private=True, passwordCallback=passphrase)
+            except:
+                log(1, "Failed to load TLS key or certificate. STARTTLS will not be offered.")
+                tls_certChain = None
+                tls_privateKey = None
+                tls_required = False
+
+
+    ##
+    ## Import plugins
+    ##
+    auth = __import__('plugins.%s' % config.get('main', 'auth', 'SASL').lower(),
+                      None, None, True)
+    userdb = __import__('plugins.%s' % config.get('main', 'userdb', 'passwd').lower(),
+                      None, None, True)
+    storage = __import__('plugins.%s' % config.get('main', 'storage', 'Dovecot').lower(),
+                         None, None, True)
 
 
     # If the same plugin is used in two places, recycle it
