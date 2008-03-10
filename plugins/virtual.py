@@ -4,7 +4,7 @@ import __init__
 import os
 import re
 
-class new(__init__.new):
+class PysievedPlugin(__init__.PysievedPlugin):
     def init(self, config):
         self.uid = config.getint('Virtual', 'uid', None)
         self.gid = config.getint('Virtual', 'gid', None)

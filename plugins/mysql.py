@@ -21,7 +21,7 @@
 import __init__
 import MySQLdb
 
-class new(__init__.new):
+class PysievedPlugin(__init__.PysievedPlugin):
     def init(self, config):
         dbhost = config.get('MySQL', 'dbhost')
         dbuser = config.get('MySQL', 'dbuser')

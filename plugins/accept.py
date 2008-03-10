@@ -53,7 +53,7 @@ class ScriptStorage(__init__.ScriptStorage):
         self.active = k
 
 
-class new(__init__.new):
+class PysievedPlugin(__init__.PysievedPlugin):
     def init(self, config):
         self.warn = config.getboolean('Accept', 'warn', True)
 

@@ -150,19 +150,19 @@ def main():
 
 
     # If the same plugin is used in two places, recycle it
-    authenticate = auth.new(log, config)
+    authenticate = auth.PysievedPlugin(log, config)
 
     if userdb == auth:
         homedir = authenticate
     else:
-        homedir = userdb.new(log, config)
+        homedir = userdb.PysievedPlugin(log, config)
 
     if storage == auth:
         store = authenticate
     elif storage == userdb:
         store = homedir
     else:
-        store = storage.new(log, config)
+        store = storage.PysievedPlugin(log, config)
 
 
     class handler(managesieve.RequestHandler):

@@ -22,7 +22,7 @@ import __init__
 import pwd
 import os
 
-class new(__init__.new):
+class PysievedPlugin(__init__.PysievedPlugin):
     def lookup(self, params):
         pwent = pwd.getpwnam(params['username'])
         uid = pwent[2]
