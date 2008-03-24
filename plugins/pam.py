@@ -26,12 +26,28 @@ class new(__init__.new):
         self.service = config.get('PAM', 'service', 'pysieved')
 
     def auth(self, params):
-        def conv(auth, query_list, user_data):
+        def conv(auth, query_list, *ign):
+            if hasattr(auth, userdata):
+                self.log(1, "PyPAM 0.5.0 may be buggy, we suggest using 0.4.2")
             resp = []
             for query, qtype in query_list:
-                if qtype == PAM.PAM_PROMPT_ECHO_OFF:
+                if qtype == PAM.PAM_PROMPT_ECHO_ON:
+                    self.log(7, '< %s (%s)' % (query, 'PAM_PROMPT_ECHO_ON'))
+                    resp.append(('', 0))
+                    self.log(7, '> %s' % '')
+                elif qtype == PAM.PAM_PROMPT_ECHO_OFF:
                     # Read string with echo turned off
+                    self.log(7, '< %s (%s)' % (query, 'PAM_PROMPT_ECHO_OFF'))
                     resp.append((params['password'], 0))
+                    self.log(7, '> %s' % params['password'])
+                elif type == PAM.PAM_PROMPT_ERROR_MSG:
+                    self.log(7, '< %s (%s)' % (query, 'PAM_PROMPT_ERROR_MSG'))
+                    resp.append(('', 0))
+                    self.log(7, '> %s' % '')
+                elif type == PAM.PAM_PROMPT_TEXT_INFO:
+                    self.log(7, '< %s (%s)' % (query, 'PAM_PROMPT_TEXT_INFO'))
+                    resp.append(('', 0))
+                    self.log(7, '> %s' % '')
                 else:
                     return None
             return resp

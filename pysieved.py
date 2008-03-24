@@ -166,7 +166,7 @@ def main():
 
         if not options.debug:
             daemon.daemon(pidfile=pidfile)
-        syslog.syslog('Starting')
+        log(1, 'Listening on %s port %d' % (addr or "INADDR_ANY", port))
         s.serve_forever()
 
 if __name__ == '__main__':

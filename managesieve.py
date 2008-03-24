@@ -188,9 +188,6 @@ class RequestHandler(SocketServer.BaseRequestHandler):
         except:
             nil, t, v, tbinfo = compact_traceback()
             self.log(-1, '[ERROR] %s:%s %s' % (t, v, tbinfo))
-            if self.debug:
-                import traceback
-                traceback.print_exc()
             self.bye(reason='Server error')
             raise
 
