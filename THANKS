@@ -23,4 +23,5 @@ Thanks to:
 * Florian Heinle <florian-pysieved@planet-tiax.de> for a bug report that
   led to removal of Konrad's capabilities addition :)
 * Farkas Levente <lfarkas@bppiac.hu> for the RPM spec file
+* Modestas Vainius <modestas@vainius.eu> for a bugfix to pam.py
 
