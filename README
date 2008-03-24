@@ -43,16 +43,16 @@ Download
 --------
 
 You can get the latest version [as
-a tarball](http://woozle.org/~neale/projects/?p=pysieved;a=snapshot;h=HEAD),
+a tarball](http://woozle.org/~neale/repos/?p=pysieved;a=snapshot;h=HEAD),
 or with git:
 
-    git clone http://woozle.org/~neale/projects/pysieved
+    git clone http://woozle.org/~neale/repos/pysieved
 
-A [web view of revisions](http://woozle.org/~neale/projects/?p=pysieved) is
+A [web view of revisions](http://woozle.org/~neale/repos/?p=pysieved) is
 also available for those without git.
 
 [Version 1.0
-RC1](http://woozle.org/~neale/projects/?p=pysieved;a=commit;h=1.0-RC1)
+RC1](http://woozle.org/~neale/repos/?p=pysieved;a=commit;h=1.0-RC1)
 was released on September 26, 2007.  This is a release candidate, and if
 no bugs are found after testing from members of the mail list, this will
 become version 1.0.
