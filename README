@@ -42,6 +42,10 @@ managesieve protocol or forking.
 Download
 --------
 
+[Version 1.0](http://woozle.org/~neale/repos/?p=pysieved;a=commit;h=1.0)
+was released on May 10, 2008 after release candidate 3 had been out for
+6 weeks with no bug reports.
+
 You can get the latest version [as
 a tarball](http://woozle.org/~neale/repos/?p=pysieved;a=snapshot;h=HEAD),
 or with git:
@@ -50,12 +54,6 @@ or with git:
 
 A [web view of revisions](http://woozle.org/~neale/repos/?p=pysieved) is
 also available for those without git.
-
-[Version 1.0
-RC3](http://woozle.org/~neale/repos/?p=pysieved;a=commit;h=1.0-RC3)
-was released on March 23, 2008.  This is a release candidate, and if
-no bugs are found after testing from members of the mail list, this will
-become version 1.0.
 
 
 Installation
