@@ -27,7 +27,7 @@ class PysievedPlugin(__init__.PysievedPlugin):
 
     def auth(self, params):
         def conv(auth, query_list, *ign):
-            if hasattr(auth, userdata):
+            if hasattr(auth, 'userdata'):
                 self.log(1, "PyPAM 0.5.0 may be buggy, we suggest using 0.4.2")
             resp = []
             for query, qtype in query_list:
@@ -72,6 +72,14 @@ if __name__ == '__main__':
         def get(*meh):
             return 'pysieved'
 
-    n = new(C())
-    print n.auth({'username': sys.argv[1],
+    def log(l, s):
+        print 'LOG (%d): %s' % (l, s)
+
+    n = new(log, C())
+    ret = n.auth({'username': sys.argv[1],
                   'password': sys.argv[2]})
+    if ret:
+        print 'Authentication worked'
+    else:
+        print 'Authentication failed'
+

@@ -42,6 +42,10 @@ managesieve protocol or forking.
 Download
 --------
 
+[Version 1.0](http://woozle.org/~neale/repos/?p=pysieved;a=commit;h=1.0)
+was released on May 10, 2008 after release candidate 3 had been out for
+6 weeks with no bug reports.
+
 You can get the latest version [as
 a tarball](http://woozle.org/~neale/repos/?p=pysieved;a=snapshot;h=HEAD),
 or with git:
@@ -50,12 +54,6 @@ or with git:
 
 A [web view of revisions](http://woozle.org/~neale/repos/?p=pysieved) is
 also available for those without git.
-
-[Version 1.0
-RC1](http://woozle.org/~neale/repos/?p=pysieved;a=commit;h=1.0-RC1)
-was released on September 26, 2007.  This is a release candidate, and if
-no bugs are found after testing from members of the mail list, this will
-become version 1.0.
 
 
 Installation
@@ -76,14 +74,15 @@ To run as a daemon, just run
 
 
 
-Mail list
----------
+Mail list / IRC channel
+-----------------------
 
 If you use pysieved, please join the pysieved mail list by emailing
 [pysieved-subscribe@woozle.org](mailto:pysieved-subscribe@woozle.org) or
 visiting the [subscription page](http://woozle.org/lists/pysieved).
 
-
+To talk about pysieved on IRC, join us in
+[irc://irc.oftc.net/pysieved](#pysieved on irc.oftc.net).
 
 --------
 
