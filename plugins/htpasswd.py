@@ -37,5 +37,5 @@ class PysievedPlugin(__init__.PysievedPlugin):
         except KeyError:
             return False
 
-        return cpass == crypt(password, cpass[:2])
+        return cpass == crypt(params['password'], cpass[:2])
 
