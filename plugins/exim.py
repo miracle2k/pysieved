@@ -60,7 +60,10 @@ class EximStorage(FileStorage.FileStorage):
 
 
 class PysievedPlugin(__init__.PysievedPlugin):
-    capabilities = ('fileinto envelope')
+    capabilities = ('envelope fileinto encoded-character '
+                    'enotify subaddress vacation copy '
+                    'comparator-i;ascii-casemap comparator-en;ascii-casemap '
+                    'comparator-i;octet comparator-i;ascii-numeric')
 
     def init(self, config):
         self.sendmail = config.get('Exim', 'sendmail',
