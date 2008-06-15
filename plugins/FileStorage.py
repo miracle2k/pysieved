@@ -39,16 +39,17 @@ def unquote(str):
     return urllib.unquote(str)
 
 
-def write_out(sieve_test, basedir, final, txt):
+def write_out(sieve_has_error, basedir, final, txt):
     script = TempFile(basedir)
 
     script.write(txt)
     script.close()
 
-    if sieve_test(basedir, script.name):
+    err_str = sieve_has_error(basedir, script.name)
+    if err_str is None:
         os.rename(script.name, final)
     else:
-        raise ValueError()
+        raise ValueError(err_str)
 
 
 class TempFile:

@@ -80,7 +80,7 @@ class PysievedPlugin(__init__.PysievedPlugin):
             os.setuid(self.uid)
 
 
-    def exim_test(self, basedir, script):
+    def exim_sieve_has_error(self, basedir, script):
         compiled = FileStorage.TempFile(basedir)
         compiled.close()
         p = popen2.Popen3(('%s -bf %s < %s' % (self.sendmail,
@@ -93,12 +93,12 @@ class PysievedPlugin(__init__.PysievedPlugin):
         p.fromchild.close()
         p.childerr.close()
         if p.wait():
-            return False
-        return True
+            return err_str
+        return None
 
 
     def create_storage(self, params):
-        return EximStorage(self.exim_test,
+        return EximStorage(self.exim_sieve_has_error,
                            self.scripts_dir,
                            self.active_file,
                            params['homedir'])

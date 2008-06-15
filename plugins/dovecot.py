@@ -251,7 +251,7 @@ class PysievedPlugin(__init__.PysievedPlugin):
             return None
 
 
-    def dovecot_test(self, basedir, script):
+    def dovecot_sieve_has_error(self, basedir, script):
         compiled = FileStorage.TempFile(basedir)
         compiled.close()
         p = popen2.Popen3(('%s %s %s ' % (self.sievec,
@@ -264,12 +264,12 @@ class PysievedPlugin(__init__.PysievedPlugin):
         p.fromchild.close()
         p.childerr.close()
         if p.wait():
-            return False
-        return True
+            return err_str
+        return None
 
 
     def create_storage(self, params):
-        return FileStorage.FileStorage(self.dovecot_test,
+        return FileStorage.FileStorage(self.dovecot_sieve_has_error,
                                        self.scripts_dir,
                                        self.active_file,
                                        params['homedir'])
