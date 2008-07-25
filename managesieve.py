@@ -24,7 +24,7 @@ import time
 import os
 import sys
 
-version = "pysieved 0.91+DEV"
+version = "pysieved 1.0"
 maxsize = 100000
 
 
