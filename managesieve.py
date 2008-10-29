@@ -29,7 +29,7 @@ try:
 except:
     have_tls = False
 
-version = "pysieved 0.91+DEV"
+version = "pysieved 1.0"
 maxsize = 100000
 
 
