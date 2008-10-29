@@ -131,4 +131,15 @@ class ScriptStorage:
             raise KeyError('Unknown script')
         raise NotImplementedError()
 
+class TestConfig:
+    def __init__(self, **kwargs):
+        self.dict = kwargs.copy()
 
+    def get(self, sect, key, default):
+        return self.dict.get(key, default)
+
+    def getint(self, sect, key, default):
+        try:
+            return int(self.dict[key])
+        except:
+            return default
