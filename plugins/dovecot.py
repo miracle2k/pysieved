@@ -178,6 +178,7 @@ class PysievedPlugin(__init__.PysievedPlugin):
         for part in ret.split('\t'):
             if part.startswith('user='):
                 username = part[5:]
+                break
 
         return {'result': 'OK', 'username': username}
 
