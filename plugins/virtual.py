@@ -10,6 +10,7 @@ class new(__init__.new):
     def init(self, config):
         self.uid = config.getint('Virtual', 'uid', None)
         self.gid = config.getint('Virtual', 'gid', None)
+        self.defaultdomain = config.get('Virtual', 'defaultdomain', 'none')
         self.path = config.get('Virtual', 'path', None)
         assert ((self.uid is not None) and
                 (self.gid is not None) and
@@ -21,7 +22,11 @@ class new(__init__.new):
         if self.uid >= 0:
             os.setuid(self.uid)
 
-        user, domain = params['username'].split('@', 1)
+        try:
+            user, domain = params['username'].split('@', 1)
+        except ValueError:
+            user, domain = params['username'], self.defaultdomain
+
         def repl(m):
             l = m.group(2)
             r = m.group(3)
@@ -46,6 +51,7 @@ class new(__init__.new):
 
 if __name__ == '__main__':
     c = __init__.TestConfig(uid=-1, gid=-1,
+                            defaultdomain="woozle.snerk",
                             path='/shared/spool/active/%d/%0.1u/%1.1u/%u/sieve/')
     n = new(None, c)
     print n.lookup({'username': 'neale@woozle.org'})
