@@ -26,6 +26,11 @@ import managesieve
 import syslog
 import sys
 from config import Config
+try:
+    from tlslite.api import *
+    have_tls = True
+except:
+    have_tls = False
 
 
 class Server(SocketServer.ForkingTCPServer):
@@ -56,6 +61,18 @@ def main():
     parser.add_option('-d', '--debug',
                       help='Log to stderr',
                       action='store_true', dest='debug', default=False)
+    parser.add_option('-B', '--base',
+                      help='Mail base directory',
+                      action='store', dest='base', default='')
+    parser.add_option('-T', '--tls',
+                      help='STARTTLS required before authentication',
+                      action='store_true', dest='tls_required', default=False)
+    parser.add_option('-K', '--key',
+                      help='TLS private key file',
+                      action='store', dest='tls_key', default='')
+    parser.add_option('-C', '--cert',
+                      help='TLS certificate file',
+                      action='store', dest='tls_cert', default='')
     (options, args) = parser.parse_args()
 
     # Read config file
@@ -65,16 +82,11 @@ def main():
     addr = options.bindaddr or config.get('main', 'bindaddr', '')
     pidfile = options.pidfile or config.get('main', 'pidfile',
                                             '/var/run/pysieved.pid')
-
-    ##
-    ## Import plugins
-    ##
-    auth = __import__('plugins.%s' % config.get('main', 'auth', 'SASL').lower(),
-                      None, None, True)
-    userdb = __import__('plugins.%s' % config.get('main', 'userdb', 'passwd').lower(),
-                      None, None, True)
-    storage = __import__('plugins.%s' % config.get('main', 'storage', 'Dovecot').lower(),
-                         None, None, True)
+    base = options.base or config.get('main', 'base', '')
+    tls_required = options.tls_required or config.getboolean('TLS', 'required', False)
+    tls_key = options.tls_key or config.get('TLS', 'key', '')
+    tls_cert = options.tls_cert or config.get('TLS', 'cert', '')
+    tls_passphrase = config.get('TLS', 'passphrase', '')
 
 
     # Define the log function
@@ -93,20 +105,64 @@ def main():
                 syslog.syslog(lvl, s)
 
 
+    # Load TLS key and cert
+    tls_privateKey = None
+    tls_certChain = None
+    if tls_key or tls_cert:
+        # Expect to use TLS
+        if not have_tls:
+            log(1, "TLSLite is not available. STARTTLS will not be offered")
+            tls_required = False
+        elif not tls_key:
+            log(1, "Cannot enable TLS without a key. STARTTLS will not be offered")
+            tls_required = False
+        elif not tls_cert:
+            log(1, "Cannot enable TLS without a certificate. STARTTLS will not be offered")
+            tls_required = False
+        else:
+            try:
+                tls_read_cert = open(tls_cert).read()
+                tls_x509 = X509()
+                tls_x509.parse(tls_read_cert)
+                tls_certChain = X509CertChain([tls_x509])
+                tls_read_key = open(tls_key).read()
+
+                def passphrase():
+                    return tls_passphrase
+
+                tls_privateKey = parsePEMKey(tls_read_key, private=True, passwordCallback=passphrase)
+            except:
+                log(1, "Failed to load TLS key or certificate. STARTTLS will not be offered.")
+                tls_certChain = None
+                tls_privateKey = None
+                tls_required = False
+
+
+    ##
+    ## Import plugins
+    ##
+    auth = __import__('plugins.%s' % config.get('main', 'auth', 'SASL').lower(),
+                      None, None, True)
+    userdb = __import__('plugins.%s' % config.get('main', 'userdb', 'passwd').lower(),
+                      None, None, True)
+    storage = __import__('plugins.%s' % config.get('main', 'storage', 'Dovecot').lower(),
+                         None, None, True)
+
+
     # If the same plugin is used in two places, recycle it
-    authenticate = auth.new(log, config)
+    authenticate = auth.PysievedPlugin(log, config)
 
     if userdb == auth:
         homedir = authenticate
     else:
-        homedir = userdb.new(log, config)
+        homedir = userdb.PysievedPlugin(log, config)
 
     if storage == auth:
         store = authenticate
     elif storage == userdb:
         store = homedir
     else:
-        store = storage.new(log, config)
+        store = storage.PysievedPlugin(log, config)
 
 
     class handler(managesieve.RequestHandler):
@@ -150,11 +206,21 @@ def main():
 
         def get_homedir(self, username):
             self.params['username'] = username
-            return homedir.lookup(self.params)
+            ret = homedir.lookup(self.params)
+            self.log(5, "Plugin returned home : %r" % ret)
+            if ret and not os.path.isabs(ret) and base:
+                ret = os.path.join(base, ret)
+                self.log(5, "Added base to home : %r" % ret)
+            return ret
 
         def new_storage(self, homedir):
             self.params['homedir'] = homedir
             return store.create_storage(self.params)
+
+        def get_tls_params(self):
+            return {'required': tls_required,
+                    'key': tls_privateKey,
+                    'cert': tls_certChain}
 
     if options.stdin:
         sock = socket.fromfd(0, socket.AF_INET, socket.SOCK_STREAM)

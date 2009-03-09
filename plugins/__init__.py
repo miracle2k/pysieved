@@ -18,7 +18,7 @@
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
 ## USA
 
-class new:
+class PysievedPlugin:
     # Override this
     capabilities = 'fileinto reject'
     mechs = [ 'PLAIN' ]
@@ -137,6 +137,15 @@ class TestConfig:
 
     def get(self, sect, key, default):
         return self.dict.get(key, default)
+
+    def getboolean(self, sect, key, default):
+        try:
+            if self.dict[key]:
+                return True
+            else:
+                return False
+        except:
+            return default
 
     def getint(self, sect, key, default):
         try:

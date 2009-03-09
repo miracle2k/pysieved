@@ -27,7 +27,7 @@ def pack(s):
     return struct.pack('!H', len(s)) + s
 
 
-class new(__init__.new):
+class PysievedPlugin(__init__.PysievedPlugin):
     def init(self, config):
         self.mux = config.get('SASL', 'mux', '/var/run/saslauthd/mux')
         self.service = config.get('SASL', 'service', 'pysieved')

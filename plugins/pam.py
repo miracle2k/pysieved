@@ -21,7 +21,7 @@
 import __init__
 import PAM
 
-class new(__init__.new):
+class PysievedPlugin(__init__.PysievedPlugin):
     def init(self, config):
         self.service = config.get('PAM', 'service', 'pysieved')
 

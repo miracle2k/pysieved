@@ -21,7 +21,7 @@
 import __init__
 from crypt import crypt
 
-class new(__init__.new):
+class PysievedPlugin(__init__.PysievedPlugin):
     def init(self, config):
         self.passfile = config.get('htpasswd', 'passwdfile',
                                    '/etc/exim/virtual/passwd')
@@ -37,5 +37,5 @@ class new(__init__.new):
         except KeyError:
             return False
 
-        return cpass == crypt(password, cpass[:2])
+        return cpass == crypt(params['password'], cpass[:2])
 
